@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Privacy: the page may only load its own files. The only other address it may talk to
+       is the visit counter (GoatCounter), which gets visit counts, never file data. -->
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob: data: https://filappyne.goatcounter.com; font-src 'self' blob: data:; worker-src 'self' blob:; connect-src 'self' https://filappyne.goatcounter.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>PDF Editor – private, in your browser</title>
+  <meta name="description" content="Edit PDF files for free in your browser. Your files never leave your device.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="appbar">
+    <div class="brand"><i data-icon="logo"></i><span>PDF Editor</span></div>
+    <div id="fileName" class="file-name"></div>
+    <div class="spacer"></div>
+    <div class="privacy" title="Your PDF is opened and saved by your browser. It is never uploaded."><i data-icon="lock"></i>Files never leave your device</div>
+    <button id="openBtn" class="btn"><i data-icon="open"></i>Open</button>
+    <button id="downloadBtn" class="btn primary" data-needs-pdf><i data-icon="download"></i>Download</button>
+  </header>
+
+  <div class="toolbar">
+    <div class="tool-group" id="tools">
+      <button class="tool" data-tool="select" data-needs-pdf title="Select and move (V)"><i data-icon="select"></i><span>Select</span></button>
+      <button class="tool" data-tool="edittext" data-needs-pdf title="Edit existing text (E)"><i data-icon="edittext"></i><span>Edit text</span></button>
+      <button class="tool" data-tool="text" data-needs-pdf title="Add new text (T)"><i data-icon="text"></i><span>Add text</span></button>
+      <button class="tool" data-tool="draw" data-needs-pdf title="Draw (P)"><i data-icon="draw"></i><span>Draw</span></button>
+      <button class="tool" data-tool="rect" data-needs-pdf title="Box (R)"><i data-icon="rect"></i><span>Box</span></button>
+      <button class="tool" data-tool="highlight" data-needs-pdf title="Highlight (H)"><i data-icon="highlight"></i><span>Highlight</span></button>
+      <button class="tool" data-tool="whiteout" data-needs-pdf title="White-out (W)"><i data-icon="whiteout"></i><span>White-out</span></button>
+      <button class="tool" id="imageBtn" data-needs-pdf title="Add an image"><i data-icon="image"></i><span>Image</span></button>
+    </div>
+
+    <div class="divider"></div>
+    <button id="undoBtn" class="icon-btn" data-needs-pdf title="Undo (Ctrl/Cmd + Z)"><i data-icon="undo"></i></button>
+    <button id="redoBtn" class="icon-btn" data-needs-pdf title="Redo (Ctrl/Cmd + Shift + Z)"><i data-icon="redo"></i></button>
+    <div class="divider"></div>
+
+    <div class="props">
+      <div class="prop-group" data-for="text" hidden>
+        <select id="font" title="Font"></select>
+        <input id="size" type="number" min="4" max="200" step="0.5" value="14" title="Font size">
+        <label class="toggle" title="Bold"><input id="bold" type="checkbox"><b>B</b></label>
+        <label class="toggle" title="Italic"><input id="italic" type="checkbox"><i class="italic">I</i></label>
+        <label class="swatch" title="Text color"><input id="color" type="color" value="#000000"></label>
+        <span id="fontInfo" class="font-info"></span>
+      </div>
+      <div class="prop-group" data-for="draw" hidden>
+        <label class="swatch" title="Pen color"><input id="penColor" type="color" value="#e11d48"></label>
+        <label class="field">Width <input id="width" type="number" min="1" max="30" value="2"></label>
+      </div>
+      <div class="prop-group" data-for="rect" hidden>
+        <label class="field">Fill <span class="swatch"><input id="fill" type="color" value="#4f46e5"></span></label>
+      </div>
+    </div>
+
+    <div class="spacer"></div>
+    <div class="zoom">
+      <button id="zoomOut" class="icon-btn" data-needs-pdf title="Zoom out"><i data-icon="zoomOut"></i></button>
+      <span id="zoomLabel">125%</span>
+      <button id="zoomIn" class="icon-btn" data-needs-pdf title="Zoom in"><i data-icon="zoomIn"></i></button>
+    </div>
+  </div>
+
+  <div class="workspace">
+    <aside class="sidebar">
+      <div class="sidebar-head">
+        <span>Pages</span>
+        <button id="mergeBtn" class="icon-btn small" data-needs-pdf title="Add another PDF at the end"><i data-icon="filePlus"></i></button>
+      </div>
+      <div id="thumbs" class="thumbs"></div>
+    </aside>
+
+    <main id="viewer">
+      <div id="empty" class="empty">
+        <div class="drop">
+          <div class="drop-icon"><i data-icon="upload"></i></div>
+          <h1>Edit your PDF, privately</h1>
+          <p>Drop a PDF here, or</p>
+          <button id="emptyOpenBtn" class="btn primary large"><i data-icon="open"></i>Choose a PDF</button>
+          <ul class="features">
+            <li>Edit existing text in its original font</li>
+            <li>Add text, drawings, boxes, highlights and images</li>
+            <li>Rotate, reorder, add and delete pages</li>
+          </ul>
+          <p class="small"><i data-icon="lock"></i> Everything runs in your browser. Your file is never uploaded.</p>
+        </div>
+      </div>
+      <div id="pages"></div>
+    </main>
+  </div>
+
+  <footer class="statusbar">
+    <span id="hint">Open a PDF to start.</span>
+    <span id="pageInfo"></span>
+  </footer>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <input id="fileInput" type="file" accept="application/pdf,.pdf" hidden>
+  <input id="mergeInput" type="file" accept="application/pdf,.pdf" hidden>
+  <input id="imageInput" type="file" accept="image/*" hidden>
+
+  <script src="vendor/pdf-lib/pdf-lib.min.js"></script>
+  <script src="vendor/pdf-lib/fontkit.umd.min.js"></script>
+  <!-- Visit counter (GoatCounter). A local copy, so no outside code is loaded. -->
+  <script data-goatcounter="https://filappyne.goatcounter.com/count" async src="vendor/count.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
