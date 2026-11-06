@@ -311,7 +311,12 @@ main.dragging { outline: 3px dashed var(--accent); outline-offset: -10px; backgr
 
 /* ---------- Empty state ---------- */
 
-.empty { display: flex; justify-content: center; padding-top: 6vh; }
+.empty { display: flex; flex-direction: column; align-items: center; gap: 32px; padding: 6vh 0 40px; }
+
+.about { width: 520px; max-width: 100%; color: #374151; line-height: 1.55; }
+.about h2 { font-size: 16px; margin: 0 0 8px; }
+.about h3 { font-size: 14px; margin: 18px 0 4px; }
+.about p { margin: 0; color: var(--muted); }
 
 .drop {
   width: 520px;

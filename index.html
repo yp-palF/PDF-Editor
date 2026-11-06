@@ -7,8 +7,31 @@
        is the visit counter (GoatCounter), which gets visit counts, never file data. -->
   <meta http-equiv="Content-Security-Policy"
         content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob: data: https://filappyne.goatcounter.com; font-src 'self' blob: data:; worker-src 'self' blob:; connect-src 'self' https://filappyne.goatcounter.com; object-src 'none'; base-uri 'none'; form-action 'none'">
-  <title>PDF Editor – private, in your browser</title>
-  <meta name="description" content="Edit PDF files for free in your browser. Your files never leave your device.">
+  <!-- Search engines and link previews -->
+  <title>Free Online PDF Editor – Edit PDF Text Privately, No Upload</title>
+  <meta name="description" content="Edit PDF text in its original font, add text, images, highlights and signatures, and rotate or reorder pages. Free, no sign-up, and your file never leaves your device.">
+  <link rel="canonical" href="https://yp-palf.github.io/PDF-Editor/">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#4f46e5">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://yp-palf.github.io/PDF-Editor/">
+  <meta property="og:title" content="Free Online PDF Editor – private, no upload">
+  <meta property="og:description" content="Edit PDF text in its original font, add text and images, and manage pages. Everything runs in your browser.">
+  <meta name="twitter:card" content="summary">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "PDF Editor",
+    "url": "https://yp-palf.github.io/PDF-Editor/",
+    "description": "A free PDF editor that runs fully in your browser. Edit text in its original font, add text, drawings, highlights and images, and rotate, reorder or delete pages. Files are never uploaded.",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Any (web browser)",
+    "browserRequirements": "Requires a modern web browser",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+  }
+  </script>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -77,7 +100,7 @@
       <div id="empty" class="empty">
         <div class="drop">
           <div class="drop-icon"><i data-icon="upload"></i></div>
-          <h1>Edit your PDF, privately</h1>
+          <h1>Free PDF editor – private, no upload</h1>
           <p>Drop a PDF here, or</p>
           <button id="emptyOpenBtn" class="btn primary large"><i data-icon="open"></i>Choose a PDF</button>
           <ul class="features">
@@ -87,6 +110,20 @@
           </ul>
           <p class="small"><i data-icon="lock"></i> Everything runs in your browser. Your file is never uploaded.</p>
         </div>
+
+        <section class="about">
+          <h2>Questions and answers</h2>
+          <h3>Is this PDF editor really free?</h3>
+          <p>Yes. There is no sign-up, no watermark and no limit on files or pages.</p>
+          <h3>Is my PDF uploaded to a server?</h3>
+          <p>No. The PDF is opened, edited and saved by your own browser. It never leaves your computer, so it is safe for private documents such as contracts, invoices and forms.</p>
+          <h3>Can I edit the existing text in a PDF?</h3>
+          <p>Yes. Choose <b>Edit text</b> and click on any text. The editor reuses the font, size and color from the PDF, so your change looks like the original.</p>
+          <h3>What else can I do?</h3>
+          <p>Add new text, images and signatures, draw, highlight, hide parts with white-out, and rotate, reorder, add, merge or delete pages. Then download the edited PDF.</p>
+          <h3>Does it work on Mac, Windows and Linux?</h3>
+          <p>Yes. It works in any modern browser, such as Chrome, Edge, Firefox and Safari. Nothing needs to be installed.</p>
+        </section>
       </div>
       <div id="pages"></div>
     </main>
