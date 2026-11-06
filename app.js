@@ -19,7 +19,8 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = './vendor/pdfjs/pdf.worker.min.mjs';
 const { PDFDocument, StandardFonts, rgb, degrees, LineCapStyle } = window.PDFLib;
 
 const LINE_HEIGHT = 1.2;
-const MIN_SCALE = 0.5;
+const DEFAULT_SCALE = 1.25;
+const MIN_SCALE = 0.25;
 const MAX_SCALE = 3;
 const THUMB_WIDTH = 120;
 
@@ -57,7 +58,7 @@ const state = {
   pdf: null,          // pdf.js document used for display
   annots: [],         // annots[pageIndex] = list of edits on that page
   views: [],          // views[pageIndex] = what is shown on screen for that page
-  scale: 1.25,
+  scale: DEFAULT_SCALE,
   tool: 'select',
   selected: null,     // { page, annot }
   editing: null,      // text annotation open in the text box
@@ -400,7 +401,7 @@ async function openFile(file) {
     $('fileName').textContent = file.name;
     $('viewer').scrollTop = 0;
     setTool('select');
-    await showPdf(bytes);
+    await showPdf(bytes, { fitWidth: true });
     track('open-pdf');
   } catch (err) {
     console.error(err);
@@ -408,7 +409,7 @@ async function openFile(file) {
   }
 }
 
-async function showPdf(bytes) {
+async function showPdf(bytes, { fitWidth = false } = {}) {
   state.bytes = bytes;
   state.selected = null;
   state.editing = null;
@@ -423,8 +424,24 @@ async function showPdf(bytes) {
     fontExtraProperties: true, // keep the font files, so we can reuse them
   }).promise;
   $('empty').hidden = true;
+  if (fitWidth) await fitToWidth();
   updateButtons();
   await renderAll();
+}
+
+// Pick a zoom so the first page fits the screen width (needed on phones).
+async function fitToWidth() {
+  const page = await state.pdf.getPage(1);
+  const pageWidth = page.getViewport({ scale: 1 }).width;
+  const viewer = $('viewer');
+  const padding = parseFloat(getComputedStyle(viewer).paddingLeft) * 2;
+  const available = viewer.clientWidth - padding;
+  state.scale = Math.max(MIN_SCALE, Math.min(DEFAULT_SCALE, available / pageWidth));
+}
+
+// Sharp on high-density screens, but capped to save memory on phones.
+function pixelRatio() {
+  return Math.min(window.devicePixelRatio || 1, 2);
 }
 
 // ---------- Rendering ----------
@@ -435,7 +452,7 @@ async function renderAll() {
   $('pages').innerHTML = '';
   $('thumbs').innerHTML = '';
   state.views = [];
-  const dpr = window.devicePixelRatio || 1;
+  const dpr = pixelRatio();
   const count = state.pdf.numPages;
 
   // First create all pages with the right size, so the layout does not jump.
@@ -452,7 +469,18 @@ async function renderAll() {
     const overlay = makeCanvas(viewport.width, viewport.height, dpr);
     overlay.className = 'overlay';
     pageEl.append(canvas, overlay);
-    $('pages').appendChild(pageEl);
+
+    // A bar with page buttons above each page. It is only shown on small screens,
+    // where there is no room for the page panel.
+    const bar = document.createElement('div');
+    bar.className = 'page-bar';
+    const label = document.createElement('span');
+    label.textContent = `Page ${i + 1} of ${count}`;
+    bar.append(label, pageActions(i, count));
+    const block = document.createElement('div');
+    block.className = 'page-block';
+    block.append(bar, pageEl);
+    $('pages').appendChild(block);
 
     const thumb = makeThumb(i, count, page);
     $('thumbs').appendChild(thumb.el);
@@ -460,6 +488,14 @@ async function renderAll() {
     state.views[i] = { page, viewport, canvas, overlay, pageEl, dpr, items: [], thumb };
     addPageEvents(i, overlay);
   }
+
+  // Small screens have no page panel, so put "Add PDF" after the last page.
+  const addPdf = document.createElement('button');
+  addPdf.className = 'btn add-pdf-end';
+  addPdf.innerHTML = icon('filePlus') + 'Add another PDF';
+  addPdf.addEventListener('click', () => $('mergeInput').click());
+  $('pages').appendChild(addPdf);
+
   $('viewer').scrollTop = scrollTop;
   updateCurrentPage();
 
@@ -493,13 +529,23 @@ function makeThumb(i, count, page) {
   const viewport = page.getViewport({ scale: THUMB_WIDTH / base.width });
   const el = document.createElement('div');
   el.className = 'thumb';
-  const canvas = makeCanvas(viewport.width, viewport.height, window.devicePixelRatio || 1);
+  const canvas = makeCanvas(viewport.width, viewport.height, pixelRatio());
   const label = document.createElement('div');
   label.className = 'thumb-label';
   label.textContent = i + 1;
 
+  const actions = pageActions(i, count);
+  actions.classList.add('thumb-actions');
+
+  el.append(canvas, actions, label);
+  el.addEventListener('click', () => state.views[i].pageEl.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  return { el, canvas, viewport };
+}
+
+// Buttons to move, rotate, add and delete a page.
+function pageActions(i, count) {
   const actions = document.createElement('div');
-  actions.className = 'thumb-actions';
+  actions.className = 'page-actions';
   const buttons = [
     ['up', 'Move page up', () => movePage(i, i - 1), i === 0],
     ['down', 'Move page down', () => movePage(i, i + 1), i === count - 1],
@@ -519,15 +565,12 @@ function makeThumb(i, count, page) {
     });
     actions.appendChild(btn);
   }
-
-  el.append(canvas, actions, label);
-  el.addEventListener('click', () => state.views[i].pageEl.scrollIntoView({ behavior: 'smooth', block: 'start' }));
-  return { el, canvas, viewport };
+  return actions;
 }
 
 async function renderThumb(view) {
   const { canvas, viewport } = view.thumb;
-  const dpr = window.devicePixelRatio || 1;
+  const dpr = pixelRatio();
   await view.page.render({
     canvasContext: canvas.getContext('2d'),
     viewport,
@@ -677,10 +720,22 @@ function addPageEvents(i, overlay) {
   overlay.addEventListener('pointerdown', (e) => onPointerDown(e, i));
   overlay.addEventListener('pointermove', (e) => onPointerMove(e, i));
   overlay.addEventListener('pointerup', (e) => onPointerUp(e, i));
+  overlay.addEventListener('pointercancel', (e) => onPointerUp(e, i));
   overlay.addEventListener('dblclick', (e) => {
     const hit = findAnnot(i, eventPoint(e, i));
     if (hit && hit.type === 'text') openEditor(i, hit);
   });
+  // On touch screens, one finger scrolls the page, except when it draws or moves an item.
+  overlay.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 1 && wantsTouch(i, eventPoint(e.touches[0], i))) e.preventDefault();
+  }, { passive: false });
+}
+
+function wantsTouch(i, pt) {
+  if (['draw', 'rect', 'highlight', 'whiteout'].includes(state.tool)) return true;
+  if (state.tool !== 'select') return false;
+  const sel = state.selected;
+  return !!findAnnot(i, pt) || !!(sel && sel.page === i && onResizeHandle(sel.annot, pt));
 }
 
 function eventPoint(e, i) {
@@ -868,6 +923,10 @@ function onPointerMove(e, i) {
 }
 
 function onPointerUp(e, i) {
+  // Phones only show the keyboard if the text box gets focus during a tap.
+  const ta = document.querySelector('.text-editor');
+  if (ta && document.activeElement !== ta) ta.focus();
+
   const drag = state.drag;
   state.drag = null;
   if (!drag) return;
@@ -1314,6 +1373,11 @@ function pickFile(input, onFile) {
     input.value = '';
     if (file) onFile(file);
   });
+}
+
+// iPhones zoom in when you type in small text. Turn that off (pinch zoom still works there).
+if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
+  document.querySelector('meta[name="viewport"]').content = 'width=device-width, initial-scale=1, maximum-scale=1';
 }
 
 // Put the icons into the page.

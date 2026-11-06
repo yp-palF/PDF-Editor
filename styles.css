@@ -258,7 +258,7 @@ select:focus, input:focus { outline: 2px solid var(--accent-soft); border-color:
 .thumb.current canvas { border-color: var(--accent); }
 .thumb-label { margin-top: 4px; font-size: 11px; color: var(--muted); }
 
-.thumb-actions {
+.thumb .thumb-actions {
   position: absolute;
   top: 4px;
   left: 50%;
@@ -292,7 +292,7 @@ main.dragging { outline: 3px dashed var(--accent); outline-offset: -10px; backgr
   box-shadow: 0 1px 3px rgba(16, 24, 40, 0.1), 0 6px 16px rgba(16, 24, 40, 0.08);
 }
 .page canvas { position: absolute; left: 0; top: 0; }
-.page .overlay { touch-action: none; }
+.page canvas { -webkit-touch-callout: none; user-select: none; }
 
 .text-editor {
   position: absolute;
@@ -376,4 +376,57 @@ main.dragging { outline: 3px dashed var(--accent); outline-offset: -10px; backgr
   color: #fff;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
   z-index: 10;
+}
+
+/* ---------- Page blocks (bar is only shown on small screens) ---------- */
+
+.page-block { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.page-bar { display: none; align-items: center; justify-content: space-between; width: 100%; color: var(--muted); font-size: 12px; }
+.page-actions { display: flex; gap: 1px; }
+.add-pdf-end { display: none; }
+
+/* ---------- Phones and small tablets ---------- */
+
+@media (max-width: 768px) {
+  .appbar { height: 48px; padding: 0 10px; gap: 8px; }
+  .file-name { display: none; }
+  .privacy { padding: 6px; }
+  .privacy-text { display: none; }
+  .btn { padding: 0 10px; }
+
+  .toolbar { padding: 4px 6px; gap: 4px; }
+  .toolbar > .divider { display: none; }
+  /* Tools stay in one row that you can swipe sideways. */
+  .tool-group { width: 100%; overflow-x: auto; scrollbar-width: none; }
+  .tool-group::-webkit-scrollbar { display: none; }
+  .tool { min-width: 58px; flex: none; }
+  .props { flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+  .prop-group { flex: none; }
+  .font-info { display: none; }
+  select { width: 130px; }
+
+  /* No page panel. Each page gets its own bar instead. */
+  .sidebar { display: none; }
+  .page-bar { display: flex; }
+  .add-pdf-end { display: inline-flex; }
+
+  main { padding: 12px 8px; }
+  #pages { gap: 16px; }
+
+  .empty { padding-top: 2vh; }
+  .drop { width: 100%; padding: 24px 16px; }
+  .drop h1 { font-size: 20px; }
+
+  .statusbar { padding: 6px 10px; font-size: 11px; }
+  .toast { left: 12px; right: 12px; transform: none; max-width: none; }
+}
+
+@media (max-width: 400px) {
+  .brand span { display: none; }
+}
+
+/* Bigger tap targets on touch screens. */
+@media (pointer: coarse) {
+  .icon-btn { width: 40px; height: 40px; }
+  .icon-btn.small { width: 34px; height: 34px; }
 }
